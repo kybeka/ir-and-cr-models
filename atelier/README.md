@@ -2,6 +2,8 @@
 
 Open one of these files in MATLAB and click **Run**. Each script finds the data automatically. You do not need to move CSV files around.
 
+The [walkthrough](WALKTHROUGH.md) explains each script's results in plain English, with examples and things to try as you go.
+
 ## 1. Yield curves
 
 Open [InteractiveYieldCurve.m](01-yield-curves/InteractiveYieldCurve.m).

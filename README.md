@@ -6,6 +6,8 @@ Notes, MATLAB code, and data for the atelier part of the course at USI.
 
 Open the [atelier guide](atelier/README.md), pick a topic, and run its MATLAB script. The data is already included.
 
+Use the [step-by-step walkthrough](atelier/WALKTHROUGH.md) alongside the scripts to understand the charts and results.
+
 | Topic | What it does |
 | --- | --- |
 | [1. Yield curves](atelier/01-yield-curves/InteractiveYieldCurve.m) | Shows how US Treasury yields changed over time. You can play the chart and save a video. |
