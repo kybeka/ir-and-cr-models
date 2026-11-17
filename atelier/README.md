@@ -20,6 +20,8 @@ Open a script in MATLAB and run it. Each script locates the shared [data/raw/](.
 
 The three supplied [PCA result files](../results/provided/pca/) are preserved separately from new script outputs. Their five maturities and settings do not match the PCA script's defaults; the generating code and configuration have not been confirmed.
 
-File paths and output locations follow the repository layout. FRED imports select only the configured series files so that the GSW file's metadata preamble is not parsed as a FRED table. The statistical calculations and default model settings were preserved. The scripts have not been executed as part of this setup.
+File paths and output locations follow the repository layout. FRED imports select only the configured series files so that the GSW file's metadata preamble is not parsed as a FRED table. The statistical calculations and default model settings were preserved. See [MATLAB validation](../tests/README.md) for execution checks and limitations.
+
+The GSW snapshot ends on November 6, 2026. Monthly aggregation uses the last available daily observation, so November 2026 is a partial month, labeled November 1 by MATLAB. The Vasicek sample ends in September 2026 because the supplied TB3MS data stop there. TB3MS is a monthly short-rate proxy, not a directly observed instantaneous rate.
 
 The third pasted script was identical to the attached first-lecture file and is stored once. The screenshots and classroom photos were used to interpret the material; they are not published in the repository. Script authorship has not been independently confirmed.
