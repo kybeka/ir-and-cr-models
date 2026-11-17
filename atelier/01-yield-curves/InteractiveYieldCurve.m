@@ -1,15 +1,19 @@
 %% 0. OPTIONS (edit here)
 clear; clc; close all;
+projectDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+dataDir = fullfile(projectDir, 'data', 'raw');
+outputDir = fullfile(projectDir, 'results', 'generated', 'yield-curves');
+if ~isfolder(outputDir), mkdir(outputDir); end
 startDate = datetime(1982,1,1);
 ids       = {'TB3MS','GS2','GS5','GS10','GS30'};
 mats      = [0.25    2     5     10     30];   % maturities in years (same order as ids)
 labels    = {'3M','2Y','5Y','10Y','30Y'};
 
 %% 1. Import all CSV files in the folder
-files = dir('*.csv');
+files = dir(fullfile(dataDir, '*.csv'));
 TT = [];
 for k = 1:numel(files)
-    X = readFRED(files(k).name);
+    X = readFRED(fullfile(files(k).folder, files(k).name));
     if isempty(TT), TT = X; else, TT = synchronize(TT, X, 'union'); end
 end
 
@@ -19,10 +23,10 @@ C = C(C.Properties.RowTimes >= startDate, :);
 Y = C{:,:};  dates = C.Properties.RowTimes;
 
 %% 3. Interactive animated yield curve
-yieldCurveVideo(Y, dates, mats, labels, ids);
+yieldCurveVideo(Y, dates, mats, labels, ids, outputDir);
 
 %% Helper functions (must be at the end of the file)
-function yieldCurveVideo(Y, dates, mats, labels, ids)
+function yieldCurveVideo(Y, dates, mats, labels, ids, outputDir)
     iLast  = find(all(~isnan(Y),2), 1, 'last');    % latest month with all maturities available
     speeds = [0.5 1 2 4];                          % playback speed multipliers
     fps    = 15;                                   % frame rate of the saved MP4
@@ -113,14 +117,15 @@ function yieldCurveVideo(Y, dates, mats, labels, ids)
 
     function onSave(src, ~)
         old = sld.Value;  src.String = 'Saving...';  drawnow;
-        vw = VideoWriter('yield_curve.mp4', 'MPEG-4');  vw.FrameRate = fps;  open(vw);
+        videoFile = fullfile(outputDir, 'yield_curve.mp4');
+        vw = VideoWriter(videoFile, 'MPEG-4');  vw.FrameRate = fps;  open(vw);
         for i = 1:iLast
             sld.Value = i;  draw();  drawnow;
             writeVideo(vw, getframe(fig));
         end
         close(vw);
         sld.Value = old;  draw();  src.String = 'Save MP4';
-        fprintf('Video saved: %s\n', fullfile(pwd, 'yield_curve.mp4'));
+        fprintf('Video saved: %s\n', videoFile);
     end
 end
 

@@ -35,7 +35,6 @@ data/private/
 tmp/
 *.log
 
-# Local MATLAB data and generated outputs
-atelier/**/*.csv
-atelier/**/*.mp4
+# Generated MATLAB outputs (supplied data and reference results are tracked)
+results/generated/
 *.asv

@@ -1,22 +1,32 @@
 # Interest Rate and Credit Risk Models
 
-Coursework repository for the atelier component of Interest Rate and Credit Risk Models at USI.
+Course materials, MATLAB atelier scripts, input data, and supplied results for Interest Rate and Credit Risk Models at USI.
 
-This repository contains the atelier materials, with space for implementations, analysis, and supporting notes.
+## Start here
 
-## Atelier materials
+- [Atelier guide](atelier/README.md): yield curves, principal component analysis, and the Vasicek model.
+- [Tutorials](materials/tutorials/): [1](materials/tutorials/tutorial-01.pdf), [2](materials/tutorials/tutorial-02.pdf), [3](materials/tutorials/tutorial-03.pdf), [4](materials/tutorials/tutorial-04.pdf).
+- [Data guide](data/README.md): six supplied CSV inputs.
+- [PCA reference results](results/provided/pca/README.md): supplied factors, loadings, and explained variance.
 
-- [MATLAB scripts: yield curve, PCA, and Vasicek](atelier/README.md)
-- [Tutorial 1](tutorial1/Tutorial1_Xiao_2026_10_05.pdf)
-- [Tutorial 2](tutorial2/Tutorial2.pdf)
-- [Tutorial 3](tutorial3/tutorial3_Xiao_20261102.pdf)
-- [Tutorial 4](tutorial4/tutorial4.pdf)
+## Folder layout
 
-The PDFs are course-provided materials, copied without modification. Their content remains attributed to the original authors.
+```text
+atelier/
+  01-yield-curves/                 InteractiveYieldCurve.m
+  02-principal-component-analysis/ YieldCurvePCA.m
+  03-vasicek-model/                VasicekCalibration.m
+data/raw/                         Supplied CSV inputs
+materials/tutorials/              Course tutorial PDFs
+results/provided/pca/             Supplied PCA reference results
+results/generated/                New script outputs (ignored by Git)
+```
+
+The tutorial PDFs and CSV attachments retain their supplied content. Scripts have descriptive filenames; their data and output paths follow this layout. The GSW dataset `feds200628.csv` is still missing, so the default PCA mode and Vasicek workflow require an additional input. See the atelier guide for the PCA FRED option.
 
 ## Working conventions
 
 - Use English for code, documentation, and commit messages.
 - Keep credentials and private datasets out of version control.
 - Document data sources and the environment needed to reproduce each analysis.
-- Follow the course requirements for collaboration, attribution, and AI disclosure.
+- Follow the course requirements for collaboration, attribution, and AI disclosure. Original course materials remain attributed to their authors.

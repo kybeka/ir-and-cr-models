@@ -1,9 +1,13 @@
 %% 0. OPTIONS (edit here)
 clear; clc; close all;
+projectDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+dataDir = fullfile(projectDir, 'data', 'raw');
+outputDir = fullfile(projectDir, 'results', 'generated', 'pca');
+if ~isfolder(outputDir), mkdir(outputDir); end
 startDate  = datetime(1982,1,1);
 dataSource = 'GSW';      % 'GSW': Fed zero-coupon yields (feds200628.csv); 'FRED': FRED CSV files
 maxMat     = 10;         % GSW only: use yields 1Y,2Y,...,maxMat (e.g. 10 or 15)
-gswFile    = 'feds200628.csv';
+gswFile    = fullfile(dataDir, 'feds200628.csv');
 
 useChanges = false;      % false: PCA on yield levels; true: on monthly changes
 K          = 3;          % number of components used in the reconstruction
@@ -17,12 +21,12 @@ labels = {'3M','2Y','5Y','10Y'};
 %% 1. Import data
 if strcmp(dataSource, 'GSW')
     if ~isfile(gswFile)                                  % try to find the file by name
-        d = dir('*.csv');
+        d = dir(fullfile(dataDir, '*.csv'));
         d = d(contains(lower({d.name}), {'feds','yield','gsw'}));
         if isempty(d)
-            error('File %s not found in %s. Put the Fed CSV in this folder or set gswFile.', gswFile, pwd);
+            error('File %s not found in %s. Put the Fed CSV in the data folder or set gswFile.', gswFile, dataDir);
         end
-        gswFile = d(1).name;  fprintf('Using file: %s\n', gswFile);
+        gswFile = fullfile(d(1).folder, d(1).name);  fprintf('Using file: %s\n', gswFile);
     end
     lines = splitlines(fileread(gswFile));
     h = find(startsWith(lower(strtrim(lines)), 'date'), 1);   % header row of the data table
@@ -49,12 +53,13 @@ if strcmp(dataSource, 'GSW')
     TTd = sortrows(table2timetable(G(:, [{'Date'}, ids])));
     TT  = retime(TTd, 'monthly', 'lastvalue');           % end-of-month values
 else
-    files = dir('*.csv');
+    files = dir(fullfile(dataDir, '*.csv'));
     TT = [];
     for k = 1:numel(files)
-        H = readtable(files(k).name, 'TreatAsMissing', '.');
+        inputFile = fullfile(files(k).folder, files(k).name);
+        H = readtable(inputFile, 'TreatAsMissing', '.');
         if ~any(ismember(H.Properties.VariableNames(2:end), ids)), continue; end
-        X = readFRED(files(k).name);
+        X = readFRED(inputFile);
         if isempty(TT), TT = X; else, TT = synchronize(TT, X, 'union'); end
     end
 end
@@ -106,12 +111,12 @@ Yal = Ylev(end-nObs+1:end, :);          % yield levels aligned with the dates of
 MonthlyData = array2timetable([Yal, Z(:,1:3)], 'RowTimes', dates, ...
     'VariableNames', [strcat('y_', labels), {'PC1_Level','PC2_Slope','PC3_Curvature'}]);
 disp(head(MonthlyData, 10));
-writetimetable(MonthlyData, 'pca_monthly_matlab.csv');
+writetimetable(MonthlyData, fullfile(outputDir, 'pca_monthly_matlab.csv'));
 
 names = {'Level','Slope','Curvature'};
 Load = array2table(A(:,1:3), 'VariableNames', names, 'RowNames', labels);
 disp(Load);
-writetable(Load, 'pca_loadings_matlab.csv', 'WriteRowNames', true);
+writetable(Load, fullfile(outputDir, 'pca_loadings_matlab.csv'), 'WriteRowNames', true);
 
 %% 7. Figure 1: factor loadings (level, slope, curvature) vs maturity
 xmax = max(mats) * 1.05;

@@ -1,9 +1,13 @@
 %% 0. OPTIONS (edit here)
 clear; clc; close all;
+projectDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+dataDir = fullfile(projectDir, 'data', 'raw');
+outputDir = fullfile(projectDir, 'results', 'generated', 'vasicek');
+if ~isfolder(outputDir), mkdir(outputDir); end
 startDate = datetime(1982,1,1);
-gswFile   = 'feds200628.csv';   % Fed zero-coupon yields (SVENYxx)
+gswFile   = fullfile(dataDir, 'feds200628.csv');   % Fed zero-coupon yields (SVENYxx)
 maxMat    = 10;                 % yields used in the calibration: 1Y,...,maxMat
-shortFile = 'TB3MS.csv';        % FRED 3M T-bill = proxy of the short rate r_t
+shortFile = fullfile(dataDir, 'TB3MS.csv');        % FRED 3M T-bill = proxy of the short rate r_t
 dt        = 1/12;               % monthly data (in years)
 
 %% 1. Import data
@@ -97,7 +101,7 @@ disp(table(labels', sqrt(mean(err.^2,1))', mean(err,1)', ...
 Params = table(kappa, rbar, sigma, theta, lambda, log(2)/kappa, ...
     'VariableNames', {'kappa','rbar','sigma','theta_Q','lambda','half_life_years'});
 disp(Params);
-writetable(Params, 'vasicek_params_matlab.csv');
+writetable(Params, fullfile(outputDir, 'vasicek_params_matlab.csv'));
 
 %% 6. Figures 1-2: data vs model
 figure(1); clf; set(gcf, 'Position', [100 100 900 450]);

@@ -1,23 +1,25 @@
-# Atelier MATLAB scripts
+# Atelier
 
-Scripts shared for the atelier, preserved as received. The descriptive filenames for PCA and Vasicek were assigned when importing pasted code; `DataAnalysis_Group5.m` retains its supplied filename. Authorship has not been independently confirmed.
+The shared screenshots identify the three scripts as first-lecture code, PCA, and Vasicek. The classroom photos show PCA loadings and factor time series, which support the PCA classification. The numbering below provides a reading order, not a verified lecture schedule.
 
-| Folder | Script | Content | Required input files |
-| --- | --- | --- | --- |
-| `yield-curve/` | `DataAnalysis_Group5.m` | Interactive Treasury yield curve with playback and MP4 export | FRED CSVs containing `TB3MS`, `GS2`, `GS5`, `GS10`, `GS30` |
-| `pca/` | `YieldCurvePCA.m` | Yield curve PCA, loadings, factors, and reconstruction | Default: `feds200628.csv` with `SVENYxx` yields; optional FRED mode uses `TB3MS`, `GS2`, `GS5`, `GS10` |
-| `vasicek/` | `VasicekCalibration.m` | Short-rate estimation, yield curve calibration, and interactive Vasicek curves | `feds200628.csv`; optional `TB3MS.csv` (otherwise uses the 1Y yield as a short-rate proxy) |
+| Topic | MATLAB script | Purpose |
+| --- | --- | --- |
+| [01 - Yield curves](01-yield-curves/) | `InteractiveYieldCurve.m` | First-lecture script: Treasury yield curves, playback, comparisons, and MP4 export. Originally supplied as `DataAnalysis_Group5.m`. |
+| [02 - Principal component analysis](02-principal-component-analysis/) | `YieldCurvePCA.m` | Yield curve factors, loadings, explained variance, and reconstruction. |
+| [03 - Vasicek model](03-vasicek-model/) | `VasicekCalibration.m` | Short-rate estimation, yield curve calibration, and interactive model curves. |
 
-## Running a script
+## Running the scripts
 
-Open MATLAB, set the Current Folder to the script's folder, place the required CSV inputs there, and run the script. Adjust its options at the top if needed. These scripts read inputs and write outputs relative to MATLAB's Current Folder.
+Open a script in MATLAB and run it. Each script locates the shared [data/raw/](../data/raw/) folder using its own file location, so inputs do not need to be copied into individual topic folders. New outputs go to `results/generated/<topic>/`, which is ignored by Git.
 
-The input datasets were not included in the supplied attachments. The scripts have not been run or validated as part of this import.
+- **Yield curves:** all five required series (`TB3MS`, `GS2`, `GS5`, `GS10`, `GS30`) are included.
+- **PCA:** the original default is `dataSource = 'GSW'`, requiring `data/raw/feds200628.csv`, which has not been supplied. To use the included FRED data, set `dataSource = 'FRED'`. The supplied script's FRED settings use four maturities (3M, 2Y, 5Y, 10Y) and yield levels (`useChanges = false`).
+- **Vasicek:** requires the missing `feds200628.csv` as well as the included `TB3MS.csv`. The nominal Treasury series are not a substitute for the expected GSW zero-coupon columns.
 
-The PCA script writes `pca_monthly_matlab.csv` and `pca_loadings_matlab.csv`. The Vasicek script writes `vasicek_params_matlab.csv`. The yield curve script can save `yield_curve.mp4` from its interface. These generated files and local CSV inputs are ignored by Git.
+## Supplied results and provenance
 
-## Import notes
+The three supplied [PCA result files](../results/provided/pca/) are preserved separately from new script outputs. Their five maturities and settings do not match the PCA script's defaults; the generating code and configuration have not been confirmed.
 
-- Three distinct scripts were supplied. The third pasted text is byte-for-byte identical to `DataAnalysis_Group5.m`, so only one copy is stored.
-- Classroom photos were supplied as visual references for PCA plots. They are not included here.
-- WhatsApp screenshots supplied context about the scripts. They are not included here because they contain personal contact details.
+Only file paths and output locations were changed during organization. The statistical calculations and default model settings were preserved. The scripts have not been executed as part of this reorganization.
+
+The third pasted script was identical to the attached first-lecture file and is stored once. The screenshots and classroom photos were used to interpret the material; they are not published in the repository. Script authorship has not been independently confirmed.
