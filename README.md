@@ -6,6 +6,7 @@ This repository contains the atelier materials, with space for implementations, 
 
 ## Atelier materials
 
+- [MATLAB scripts: yield curve, PCA, and Vasicek](atelier/README.md)
 - [Tutorial 1](tutorial1/Tutorial1_Xiao_2026_10_05.pdf)
 - [Tutorial 2](tutorial2/Tutorial2.pdf)
 - [Tutorial 3](tutorial3/tutorial3_Xiao_20261102.pdf)

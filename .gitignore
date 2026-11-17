@@ -34,3 +34,8 @@ venv/
 data/private/
 tmp/
 *.log
+
+# Local MATLAB data and generated outputs
+atelier/**/*.csv
+atelier/**/*.mp4
+*.asv
