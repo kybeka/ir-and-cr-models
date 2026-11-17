@@ -9,8 +9,9 @@ ids       = {'TB3MS','GS2','GS5','GS10','GS30'};
 mats      = [0.25    2     5     10     30];   % maturities in years (same order as ids)
 labels    = {'3M','2Y','5Y','10Y','30Y'};
 
-%% 1. Import all CSV files in the folder
+%% 1. Import the selected FRED series
 files = dir(fullfile(dataDir, '*.csv'));
+files = files(ismember({files.name}, strcat(ids, '.csv')));
 TT = [];
 for k = 1:numel(files)
     X = readFRED(fullfile(files(k).folder, files(k).name));

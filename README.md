@@ -22,7 +22,7 @@ results/provided/pca/             Supplied PCA reference results
 results/generated/                New script outputs (ignored by Git)
 ```
 
-The tutorial PDFs and CSV attachments retain their supplied content. Scripts have descriptive filenames; their data and output paths follow this layout. The GSW dataset `feds200628.csv` is still missing, so the default PCA mode and Vasicek workflow require an additional input. See the atelier guide for the PCA FRED option.
+The tutorial PDFs and CSV attachments retain their supplied content. Scripts have descriptive filenames; their data and output paths follow this layout. The Federal Reserve GSW dataset `feds200628.csv` is included for the default PCA mode and Vasicek workflow. See the data guide for its source and snapshot details.
 
 ## Working conventions
 

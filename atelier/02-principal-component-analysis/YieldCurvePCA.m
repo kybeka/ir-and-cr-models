@@ -54,6 +54,7 @@ if strcmp(dataSource, 'GSW')
     TT  = retime(TTd, 'monthly', 'lastvalue');           % end-of-month values
 else
     files = dir(fullfile(dataDir, '*.csv'));
+    files = files(ismember({files.name}, strcat(ids, '.csv')));
     TT = [];
     for k = 1:numel(files)
         inputFile = fullfile(files(k).folder, files(k).name);
