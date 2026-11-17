@@ -1,27 +1,51 @@
-# Atelier
+# Using the atelier scripts
 
-The shared screenshots identify the three scripts as first-lecture code, PCA, and Vasicek. The classroom photos show PCA loadings and factor time series, which support the PCA classification. The numbering below provides a reading order, not a verified lecture schedule.
+Open one of these files in MATLAB and click **Run**. Each script finds the data automatically. You do not need to move CSV files around.
 
-| Topic | MATLAB script | Purpose |
-| --- | --- | --- |
-| [01 - Yield curves](01-yield-curves/) | `InteractiveYieldCurve.m` | First-lecture script: Treasury yield curves, playback, comparisons, and MP4 export. Originally supplied as `DataAnalysis_Group5.m`. |
-| [02 - Principal component analysis](02-principal-component-analysis/) | `YieldCurvePCA.m` | Yield curve factors, loadings, explained variance, and reconstruction. |
-| [03 - Vasicek model](03-vasicek-model/) | `VasicekCalibration.m` | Short-rate estimation, yield curve calibration, and interactive model curves. |
+## 1. Yield curves
 
-## Running the scripts
+Open [InteractiveYieldCurve.m](01-yield-curves/InteractiveYieldCurve.m).
 
-Open a script in MATLAB and run it. Each script locates the shared [data/raw/](../data/raw/) folder using its own file location, so inputs do not need to be copied into individual topic folders. New outputs go to `results/generated/<topic>/`, which is ignored by Git.
+This is the first-lecture code, originally named `DataAnalysis_Group5.m`. It plots US Treasury yields from 3 months to 30 years.
 
-- **Yield curves:** all five required series (`TB3MS`, `GS2`, `GS5`, `GS10`, `GS30`) are included.
-- **PCA:** the original default is `dataSource = 'GSW'`, using the included `data/raw/feds200628.csv`. To use the FRED data instead, set `dataSource = 'FRED'`. The supplied script's FRED settings use four maturities (3M, 2Y, 5Y, 10Y) and yield levels (`useChanges = false`).
-- **Vasicek:** uses the included `feds200628.csv` and `TB3MS.csv`. The scripts intersect the available dates, so the shorter TB3MS snapshot limits the combined sample.
+Use the slider to choose a month or press **Play**. The table compares that month with a year earlier. **Save MP4** saves a video to `results/generated/yield-curves/`.
 
-## Supplied results and provenance
+## 2. PCA: the main ways the curve moves
 
-The three supplied [PCA result files](../results/provided/pca/) are preserved separately from new script outputs. Their five maturities and settings do not match the PCA script's defaults; the generating code and configuration have not been confirmed.
+Open [YieldCurvePCA.m](02-principal-component-analysis/YieldCurvePCA.m).
 
-File paths and output locations follow the repository layout. FRED imports select only the configured series files so that the GSW file's metadata preamble is not parsed as a FRED table. The statistical calculations and default model settings were preserved. See [MATLAB validation](../tests/README.md) for execution checks and limitations.
+PCA stands for principal component analysis. It finds patterns that explain most of the differences between yield curves. The first three are usually described as:
 
-The GSW snapshot ends on November 6, 2026. Monthly aggregation uses the last available daily observation, so November 2026 is a partial month, labeled November 1 by MATLAB. The Vasicek sample ends in September 2026 because the supplied TB3MS data stop there. TB3MS is a monthly short-rate proxy, not a directly observed instantaneous rate.
+- **Level:** yields rise or fall together.
+- **Slope:** short-term and long-term yields move differently.
+- **Curvature:** yields in the middle move differently from those at the ends.
 
-The third pasted script was identical to the attached first-lecture file and is stored once. The screenshots and classroom photos were used to interpret the material; they are not published in the repository. Script authorship has not been independently confirmed.
+The script plots these patterns and how they change over time. It also checks how well three patterns can approximate the original data.
+
+Settings at the top of the file:
+
+| Setting | What it means |
+| --- | --- |
+| `dataSource = 'GSW'` | Use the included Federal Reserve zero-coupon yields. The default uses 1-year through 10-year yields. |
+| `dataSource = 'FRED'` | Use the separate Treasury CSVs instead: 3 months, 2 years, 5 years, and 10 years. |
+| `useChanges = false` | Compare yield levels. Set to `true` to compare changes from one month to the next. |
+| `K = 3` | Use the first three patterns to approximate the data. |
+
+Results are saved to `results/generated/pca/`. The [shared PCA results](../results/provided/pca/) use different settings, so they will not match the defaults exactly.
+
+## 3. Vasicek: a model for interest rates
+
+Open [VasicekCalibration.m](03-vasicek-model/VasicekCalibration.m).
+
+The Vasicek model assumes the short-term interest rate tends to move back towards a long-run average. The script estimates the model from the data, then compares its predicted yields with the observed yields.
+
+The last window lets you switch between the parameters from the slides and those estimated from the data. You can also edit the values yourself. Results are saved to `results/generated/vasicek/`.
+
+## A few things to know
+
+- Yields are shown in percent. A move from 4% to 5% is **1 percentage point (pp)**, or **100 basis points (bp)**.
+- GSW data ends on November 6, 2026. The last monthly value uses that day, so November is incomplete. MATLAB labels it November 1.
+- The Vasicek data ends in September 2026 because that is where the TB3MS file stops. TB3MS is a 3-month Treasury bill rate, used here as an estimate of the short-term rate.
+- All three scripts passed the [MATLAB checks](../tests/README.md). This checks that the code works; it does not mean the model fits the data perfectly.
+
+The screenshots helped identify the scripts as first-lecture code, PCA, and Vasicek. The folder numbers give a suggested order. Photos and chat screenshots are not included. The duplicate first-lecture script is stored once; the original authors of the shared scripts have not been confirmed.

@@ -1,5 +1,5 @@
 function runAtelierChecks
-% Run numerical and interactive checks against the repository data.
+% Check the calculations, chart controls, and video export using the included data.
 root = fileparts(fileparts(mfilename('fullpath')));
 fprintf('MATLAB %s\n', version);
 for source = ["GSW", "FRED"]

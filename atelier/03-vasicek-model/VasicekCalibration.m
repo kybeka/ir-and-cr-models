@@ -1,4 +1,4 @@
-%% 0. OPTIONS (edit here)
+%% 0. Settings you can change
 clear; clc; close all;
 projectDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 dataDir = fullfile(projectDir, 'data', 'raw');
@@ -6,12 +6,12 @@ outputDir = fullfile(projectDir, 'results', 'generated', 'vasicek');
 if ~isfolder(outputDir), mkdir(outputDir); end
 startDate = datetime(1982,1,1);
 gswFile   = fullfile(dataDir, 'feds200628.csv');   % Fed zero-coupon yields (SVENYxx)
-maxMat    = 10;                 % yields used in the calibration: 1Y,...,maxMat
+maxMat    = 10;                 % fit the model to 1-year through 10-year yields
 shortFile = fullfile(dataDir, 'TB3MS.csv');        % FRED 3M T-bill = proxy of the short rate r_t
 dt        = 1/12;               % monthly data (in years)
 
-%% 1. Import data
-% --- Fed zero-coupon yields -> monthly (end of month)
+%% 1. Read the yields and short-term rate
+% Use the last available daily yield in each month.
 lines = splitlines(fileread(gswFile));
 h = find(startsWith(lower(strtrim(lines)), 'date'), 1);
 G = readtable(gswFile, 'NumHeaderLines', h-1, 'TreatAsMissing', {'NA',''});
@@ -29,7 +29,7 @@ tau    = yrs(sel);  tau = tau(:)';             % maturities in years (1 x m)
 labels = cellstr(compose('%dY', tau));
 TTy = retime(sortrows(table2timetable(G(:, [{'Date'}, ids]))), 'monthly', 'lastvalue');
 
-% --- short rate r_t
+% Use the 3-month bill rate as an estimate of the short-term rate.
 if isfile(shortFile)
     S = readtable(shortFile, 'TreatAsMissing', '.');
     S.Properties.VariableNames{1} = 'Date';  S.Date = datetime(S.Date);
@@ -47,19 +47,20 @@ TT = synchronize(TTy, TTs, 'intersection');
 TT = TT(TT.Properties.RowTimes >= startDate, :);
 TT = rmmissing(TT);
 dates = TT.Properties.RowTimes;
-Y = TT{:, ids} / 100;                   % yields in decimals, T x m
-r = TT.r / 100;                         % short rate in decimals, T x 1
+Y = TT{:, ids} / 100;                   % convert percent to decimals: 4% becomes 0.04
+r = TT.r / 100;                         % one short-term rate per month
 nObs = numel(r);
 fprintf('Sample: %s -> %s, T=%d, short rate: %s\n', datestr(dates(1),'mmm yyyy'), datestr(dates(end),'mmm yyyy'), nObs, shortName);
 
-%% 2. CONTINUOUS TIME: dr = kappa (rbar - r) dt + sigma dW   (P-measure)
-%    Q-measure: theta = rbar - lambda*sigma/kappa  (constant market price of risk lambda)
-%    Bond price: P(r,tau) = exp(A(tau) - B(tau) r),  yield R = (B r - A)/tau
+%% 2. Set up the Vasicek bond and yield formulas
+% Rates tend to return to rbar, at speed kappa, with random changes scaled by sigma.
+% For pricing bonds, the long-run rate is theta = rbar - lambda*sigma/kappa.
+% lambda is the market price of risk. The bond price is exp(A - B*r).
 Bf = @(k,t) (1 - exp(-k*t)) ./ k;
 Af = @(k,th,sg,t) (th - sg^2/(2*k^2)) .* (Bf(k,t) - t) - sg^2 * Bf(k,t).^2 / (4*k);
 Rf = @(r,k,th,sg,t) (r * Bf(k,t) - Af(k,th,sg,t)) ./ t;   % r: T x 1, t: 1 x m -> T x m
 
-%% 3. FROM CONTINUOUS TO DISCRETE TIME (exact discretization) + estimation
+%% 3. Estimate the model from one month's rate and the next
 %    r_{t+dt} = a + b r_t + eps,  b = exp(-kappa dt),  a = rbar (1-b),
 %    eps ~ N(0, sigma^2 (1-b^2)/(2 kappa))
 x = r(1:end-1);  y = r(2:end);
@@ -79,20 +80,20 @@ fprintf('\nDiscrete-time AR(1): a=%.5f  b=%.4f (s.e. %.4f)  Var(eps)=%.3e\n', a,
 fprintf('Continuous-time parameters (P): kappa=%.4f  rbar=%.3f%%  sigma=%.1f bp/sqrt(yr)\n', kappa, 100*rbar, 1e4*sigma);
 fprintf('  half-life = %.2f years,  stationary std = %.0f bp\n', log(2)/kappa, 1e4*sigma/sqrt(2*kappa));
 
-%% 4. Calibration of the market price of risk lambda on the yield curve
-%    R is linear in theta: R = R(theta=0) + slope*theta  ->  OLS in closed form
+%% 4. Fit the pricing parameter to the observed yields
+% Predicted yields are linear in theta, so least squares gives a direct solution.
 R0    = Rf(r, kappa, 0, sigma, tau);
 slope = -(Bf(kappa,tau) - tau) ./ tau;                  % dR/dtheta, 1 x m
 theta = sum(sum((Y - R0) .* slope)) / (nObs * sum(slope.^2));
 lambda = (rbar - theta) * kappa / sigma;
 fprintf('Q-measure: theta=%.3f%%  lambda=%.4f\n', 100*theta, lambda);
 
-% numerical check of the closed form A(tau) (ODE: A'(s) = sigma^2 B(s)^2/2 - kappa theta B(s))
+% Check A(tau) another way: integrate A'(s) = sigma^2 B(s)^2/2 - kappa theta B(s).
 Tchk = tau(end);
 Anum = integral(@(s) 0.5*sigma^2*Bf(kappa,s).^2 - kappa*theta*Bf(kappa,s), 0, Tchk);
 fprintf('Check A(%gY): closed form = %.8f, numeric = %.8f\n', Tchk, Af(kappa,theta,sigma,Tchk), Anum);
 
-%% 5. Fit
+%% 5. Compare predicted yields with the data and save the parameters
 Yhat = Rf(r, kappa, theta, sigma, tau);
 err  = (Y - Yhat) * 1e4;                                % basis points
 disp(table(labels', sqrt(mean(err.^2,1))', mean(err,1)', ...
@@ -103,7 +104,7 @@ Params = table(kappa, rbar, sigma, theta, lambda, log(2)/kappa, ...
 disp(Params);
 writetable(Params, fullfile(outputDir, 'vasicek_params_matlab.csv'));
 
-%% 6. Figures 1-2: data vs model
+%% 6. Plot observed and predicted yields
 figure(1); clf; set(gcf, 'Position', [100 100 900 450]);
 plot(tau, 100*mean(Y,1),    'b-o', 'LineWidth', 2); hold on;
 plot(tau, 100*mean(Yhat,1), 'r--o', 'LineWidth', 2); grid on;
@@ -123,12 +124,12 @@ for m = targets
     if nplot == 1, legend({'data','Vasicek'}, 'Location', 'best'); end
 end
 
-%% 7. Figure 3: interactive Vasicek yield curves (slide parameters by default)
+%% 7. Open the chart where you can change the model parameters
 vasicekYieldUI(kappa, rbar, sigma, lambda, r);
 
 %% Local functions (must be at the end of the file)
 function vasicekYieldUI(kEst, rbEst, sgEst, lmEst, rObs)
-    % parameter sets (all values in decimals, as in the slides)
+    % Start with the slide values. The menu also offers the estimated values.
     slide = struct('kappa', 0.2, 'rbar', 0.06, 'sigma', 0.03, 'lambda', -0.015, ...
                    'r0', '0.03 0.04 0.05 0.06 0.07', 'tauMax', 30);
     rs = sort(rObs);  q = [0.05 0.25 0.50 0.75 0.95];

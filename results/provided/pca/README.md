@@ -1,13 +1,15 @@
-# Supplied PCA reference results
+# Shared PCA results
 
-These CSV attachments are preserved without modification. They were provided separately from the MATLAB scripts and have not been reproduced or independently validated.
+These three files were shared separately from the MATLAB scripts. They are stored unchanged.
 
-| File | Contents |
+| File | What is in it |
 | --- | --- |
-| `pca_variance.csv` | Eigenvalues, explained variance fractions, and cumulative fractions for five components |
-| `pca_factors.csv` | Dated observations for PC1 through PC5 |
-| `pca_loadings.csv` | Level, slope, and curvature loadings at 3M, 2Y, 5Y, 10Y, and 30Y |
+| `pca_variance.csv` | How much of the variation each of the five components explains. The shares are fractions: 0.8 means 80%. Eigenvalues measure the variation in each component. |
+| `pca_factors.csv` | Values of the five components over time. |
+| `pca_loadings.csv` | Weights showing how the first three components relate to each yield: 3 months, 2 years, 5 years, 10 years, and 30 years. |
 
-The supplied results use five maturities, while the MATLAB PCA script defaults to ten GSW maturities and its optional FRED configuration lists four. The supplied slope loadings also use the opposite sign convention to the script's normalization. These files should therefore be treated as reference outputs with unconfirmed generating settings, not verified outputs of the included script.
+These will not match the MATLAB defaults exactly. The shared results use five maturities; the script uses ten with GSW data or four with FRED data. The slope weights also have their signs flipped. A PCA pattern can be flipped without changing what it explains.
 
-Fresh MATLAB outputs are written to `results/generated/pca/` and do not overwrite these files.
+We do not have the exact code and settings that produced these files, so they are kept as examples rather than treated as checked results of this script.
+
+When you run the MATLAB PCA script, it saves new files to `results/generated/pca/`. It does not overwrite these shared files.

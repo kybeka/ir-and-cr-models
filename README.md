@@ -1,32 +1,26 @@
 # Interest Rate and Credit Risk Models
 
-Course materials, MATLAB atelier scripts, input data, and supplied results for Interest Rate and Credit Risk Models at USI.
+Notes, MATLAB code, and data for the atelier part of the course at USI.
 
-## Start here
+## Where to start
 
-- [Atelier guide](atelier/README.md): yield curves, principal component analysis, and the Vasicek model.
-- [Tutorials](materials/tutorials/): [1](materials/tutorials/tutorial-01.pdf), [2](materials/tutorials/tutorial-02.pdf), [3](materials/tutorials/tutorial-03.pdf), [4](materials/tutorials/tutorial-04.pdf).
-- [Data guide](data/README.md): six supplied CSV inputs.
-- [PCA reference results](results/provided/pca/README.md): supplied factors, loadings, and explained variance.
+Open the [atelier guide](atelier/README.md), pick a topic, and run its MATLAB script. The data is already included.
 
-## Folder layout
+| Topic | What it does |
+| --- | --- |
+| [1. Yield curves](atelier/01-yield-curves/InteractiveYieldCurve.m) | Shows how US Treasury yields changed over time. You can play the chart and save a video. |
+| [2. PCA](atelier/02-principal-component-analysis/YieldCurvePCA.m) | Finds the main patterns in how the yield curve moves. |
+| [3. Vasicek](atelier/03-vasicek-model/VasicekCalibration.m) | Fits a short-rate model and compares its predicted yields with the data. |
 
-```text
-atelier/
-  01-yield-curves/                 InteractiveYieldCurve.m
-  02-principal-component-analysis/ YieldCurvePCA.m
-  03-vasicek-model/                VasicekCalibration.m
-data/raw/                         Supplied CSV inputs
-materials/tutorials/              Course tutorial PDFs
-results/provided/pca/             Supplied PCA reference results
-results/generated/                New script outputs (ignored by Git)
-```
+## What is in each folder?
 
-The tutorial PDFs and CSV attachments retain their supplied content. Scripts have descriptive filenames; their data and output paths follow this layout. The Federal Reserve GSW dataset `feds200628.csv` is included for the default PCA mode and Vasicek workflow. See the data guide for its source and snapshot details.
+- `atelier/`: the three MATLAB scripts and [how to use them](atelier/README.md).
+- `materials/tutorials/`: tutorial PDFs [1](materials/tutorials/tutorial-01.pdf), [2](materials/tutorials/tutorial-02.pdf), [3](materials/tutorials/tutorial-03.pdf), and [4](materials/tutorials/tutorial-04.pdf).
+- `data/raw/`: the original CSV files. See [where the data came from](data/README.md).
+- `results/provided/pca/`: [PCA results shared separately](results/provided/pca/README.md).
+- `results/generated/`: results saved when you run the scripts. These stay on your computer.
+- `tests/`: [checks that the scripts work](tests/README.md).
 
-## Working conventions
+The scripts passed checks in MATLAB R2026a. The last month of GSW data is incomplete, and the shared PCA results use different settings from the script defaults. The guides explain both.
 
-- Use English for code, documentation, and commit messages.
-- Keep credentials and private datasets out of version control.
-- Document data sources and the environment needed to reproduce each analysis.
-- Follow the course requirements for collaboration, attribution, and AI disclosure. Original course materials remain attributed to their authors.
+Keep the original data and course materials unchanged. Follow the course rules on collaboration, sources, and AI use.

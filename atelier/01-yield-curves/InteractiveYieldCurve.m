@@ -1,4 +1,4 @@
-%% 0. OPTIONS (edit here)
+%% 0. Settings you can change
 clear; clc; close all;
 projectDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 dataDir = fullfile(projectDir, 'data', 'raw');
@@ -9,7 +9,7 @@ ids       = {'TB3MS','GS2','GS5','GS10','GS30'};
 mats      = [0.25    2     5     10     30];   % maturities in years (same order as ids)
 labels    = {'3M','2Y','5Y','10Y','30Y'};
 
-%% 1. Import the selected FRED series
+%% 1. Read the selected FRED files
 files = dir(fullfile(dataDir, '*.csv'));
 files = files(ismember({files.name}, strcat(ids, '.csv')));
 TT = [];
@@ -18,18 +18,18 @@ for k = 1:numel(files)
     if isempty(TT), TT = X; else, TT = synchronize(TT, X, 'union'); end
 end
 
-%% 2. Select series and period
+%% 2. Choose the yields and dates
 C = TT(:, ids);
 C = C(C.Properties.RowTimes >= startDate, :);
 Y = C{:,:};  dates = C.Properties.RowTimes;
 
-%% 3. Interactive animated yield curve
+%% 3. Open the yield curve chart
 yieldCurveVideo(Y, dates, mats, labels, ids, outputDir);
 
 %% Helper functions (must be at the end of the file)
 function yieldCurveVideo(Y, dates, mats, labels, ids, outputDir)
     iLast  = find(all(~isnan(Y),2), 1, 'last');    % latest month with all maturities available
-    speeds = [0.5 1 2 4];                          % playback speed multipliers
+    speeds = [0.5 1 2 4];                          % half speed, normal speed, 2x, or 4x
     fps    = 15;                                   % frame rate of the saved MP4
     yl = [min(Y(:)) max(Y(:))];  pad = 0.05*diff(yl);  yl = yl + [-pad pad];   % fixed y-axis limits
 

@@ -1,4 +1,4 @@
-%% 0. OPTIONS (edit here)
+%% 0. Settings you can change
 clear; clc; close all;
 projectDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 dataDir = fullfile(projectDir, 'data', 'raw');
@@ -9,16 +9,16 @@ dataSource = 'GSW';      % 'GSW': Fed zero-coupon yields (feds200628.csv); 'FRED
 maxMat     = 10;         % GSW only: use yields 1Y,2Y,...,maxMat (e.g. 10 or 15)
 gswFile    = fullfile(dataDir, 'feds200628.csv');
 
-useChanges = false;      % false: PCA on yield levels; true: on monthly changes
-K          = 3;          % number of components used in the reconstruction
-nStd       = 1;          % shock size in the plots (std. deviations of the factor)
+useChanges = false;      % false: use yields; true: use month-to-month changes
+K          = 3;          % number of patterns used to approximate the yields
+nStd       = 1;          % not used by the current plots
 
 % FRED settings (used only if dataSource = 'FRED')
 ids    = {'TB3MS','GS2','GS5','GS10'};
 mats   = [0.25 2 5 10];                 % maturities in years (same order as ids)
 labels = {'3M','2Y','5Y','10Y'};
 
-%% 1. Import data
+%% 1. Read the data
 if strcmp(dataSource, 'GSW')
     if ~isfile(gswFile)                                  % try to find the file by name
         d = dir(fullfile(dataDir, '*.csv'));
@@ -51,7 +51,7 @@ if strcmp(dataSource, 'GSW')
     fprintf('Yields used: %s\n', strjoin(labels, ' '));
 
     TTd = sortrows(table2timetable(G(:, [{'Date'}, ids])));
-    TT  = retime(TTd, 'monthly', 'lastvalue');           % end-of-month values
+    TT  = retime(TTd, 'monthly', 'lastvalue');           % last available value in each month
 else
     files = dir(fullfile(dataDir, '*.csv'));
     files = files(ismember({files.name}, strcat(ids, '.csv')));
@@ -65,50 +65,50 @@ else
     end
 end
 
-%% 2. Select series and period
+%% 2. Choose the yields and dates
 C = TT(:, ids);
 C = C(C.Properties.RowTimes >= startDate, :);
 C = rmmissing(C);                       % keep only months with all maturities
-Y = C{:,:};  dates = C.Properties.RowTimes;   % yields in %, T x p
-Ylev = Y;                               % yield levels (used for the average curve)
+Y = C{:,:};  dates = C.Properties.RowTimes;   % yields in percent; one row per month
+Ylev = Y;                               % keep the original yields for the saved table
 if useChanges
-    Y = diff(Y);  dates = dates(2:end); % Delta y_t
+    Y = diff(Y);  dates = dates(2:end); % changes between consecutive months
 end
 [nObs, p] = size(Y);
 fprintf('Sample: %s -> %s, T=%d, p=%d\n', datestr(dates(1),'mmm yyyy'), datestr(dates(end),'mmm yyyy'), nObs, p);
 
-%% 3. PCA: Sigma = A * Lambda * A'
+%% 3. Find the main patterns (PCA)
 Rbar  = mean(Y,1);
-Rd    = Y - Rbar;                       % demeaned
+Rd    = Y - Rbar;                       % subtract each yield's average
 Sigma = cov(Rd);                        % sample covariance matrix
 [A, L] = eig(Sigma);
-[lam, idx] = sort(diag(L), 'descend');  % lambda_1 > ... > lambda_p
+[lam, idx] = sort(diag(L), 'descend');  % put the patterns explaining most variation first
 A = A(:, idx);
 
-% sign normalization (same convention as the slides)
+% Either sign describes the same pattern. Choose signs to match the slides.
 if sum(A(:,1)) < 0, A(:,1) = -A(:,1); end   % level > 0
 if A(1,2)   < 0,    A(:,2) = -A(:,2); end   % slope: positive on the short end
 if A(end,3) < 0,    A(:,3) = -A(:,3); end   % curvature: positive on the long end
 
-% explained variance: R2_PCA(k) = sum_{i<=k} lambda_i / sum_i lambda_i
+% Share of the total variation explained by each pattern, then by all so far.
 expl = lam / sum(lam);
 cumv = cumsum(expl);
 disp(table((1:p)', lam, 100*expl, 100*cumv, ...
     'VariableNames', {'PC','Eigenvalue','Explained_pct','Cumulative_pct'}));
 
-%% 4. PCA factors: Z_t = A'(R_t - Rbar)
-Z = Rd * A;                             % T x p, columns = principal components
+%% 4. Calculate each pattern's value over time
+Z = Rd * A;                             % one row per month, one column per component
 fprintf('Var(Z_i):  %s\n', mat2str(var(Z), 4));
 fprintf('lambda_i:  %s\n', mat2str(lam', 4));
 fprintf('max |Corr(Z) - I| = %.2e\n', max(abs(corrcoef(Z) - eye(p)), [], 'all'));
 
-%% 5. Reconstruction with K components: R - Rbar ~ A_(K) Z_(K)
+%% 5. Check how well the first K patterns approximate the data
 Rhat = Z(:,1:K) * A(:,1:K)' + Rbar;
 rmse = sqrt(mean((Y - Rhat).^2, 1));
 disp(table(labels', rmse', 'VariableNames', {'Maturity','RMSE_pp'}));
 
-%% 6. Monthly table: yields + PC1 (level), PC2 (slope), PC3 (curvature)
-Yal = Ylev(end-nObs+1:end, :);          % yield levels aligned with the dates of Z
+%% 6. Save the monthly yields, first three components, and their weights
+Yal = Ylev(end-nObs+1:end, :);          % match the yields to the component dates
 MonthlyData = array2timetable([Yal, Z(:,1:3)], 'RowTimes', dates, ...
     'VariableNames', [strcat('y_', labels), {'PC1_Level','PC2_Slope','PC3_Curvature'}]);
 disp(head(MonthlyData, 10));
@@ -119,7 +119,7 @@ Load = array2table(A(:,1:3), 'VariableNames', names, 'RowNames', labels);
 disp(Load);
 writetable(Load, fullfile(outputDir, 'pca_loadings_matlab.csv'), 'WriteRowNames', true);
 
-%% 7. Figure 1: factor loadings (level, slope, curvature) vs maturity
+%% 7. Plot the weights of the first three patterns across maturities
 xmax = max(mats) * 1.05;
 
 figure(1); clf; set(gcf, 'Position', [100 100 900 450]);
@@ -131,7 +131,7 @@ grid on; xlabel('Maturity (years)'); xlim([0 xmax]);
 title('Factor loadings (PCA) for the U.S. yield curve');
 legend({'level','slope','curvature'}, 'Location', 'best');
 
-%% 8. Figure 2: bar chart of PC loadings, one group per yield maturity
+%% 8. Show the same weights as a bar chart
 cols = [0 0.2 0.8; 0.9 0.1 0.1; 0.93 0.69 0.13];   % PC1 blue, PC2 red, PC3 yellow
 figure(2); clf; set(gcf, 'Position', [100 100 1100 450]);
 b = bar(A(:,1:3), 'grouped');
@@ -142,7 +142,7 @@ leg = cell(1,3);
 for i = 1:3, leg{i} = sprintf('PC%d (%.1f%%)', i, 100*expl(i)); end
 legend(leg, 'Location', 'best');
 
-%% 9. Figure 3: monthly PCA factors over time
+%% 9. Plot the first three components over time
 figure(3); clf; set(gcf, 'Position', [100 100 1000 700]);
 for i = 1:3
     subplot(3,1,i);
